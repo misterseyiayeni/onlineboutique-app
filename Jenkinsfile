@@ -60,7 +60,7 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'DockerHub-Credential', toolName: 'docker') {
-                        sh "docker build -t dappyplay4u/adservice:latest ."
+                        sh "docker build -t misterseyiayeni/adservice:latest ."
                     }
                 }
             }
@@ -69,7 +69,7 @@ pipeline {
         // Snyk SCA Test
         stage('Snyk SCA Test | Dependencies') {
             steps {
-                sh "${SNYK_HOME}/snyk-linux test --docker dappyplay4u/adservice:latest || true"
+                sh "${SNYK_HOME}/snyk-linux test --docker misterseyiayeni/adservice:latest || true"
             }
         }
 
@@ -78,7 +78,7 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'DockerHub-Credential', toolName: 'docker') {
-                        sh "docker push dappyplay4u/adservice:latest"
+                        sh "docker push misterseyiayeni/adservice:latest"
                     }
                 }
             }
