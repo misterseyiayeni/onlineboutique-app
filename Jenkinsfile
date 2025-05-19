@@ -2,15 +2,13 @@ pipeline {
     agent any
 
     environment {
-        AWS_DEFAULT_REGION = 'us-west-2' // ✅ Update to your AWS region
+        AWS_DEFAULT_REGION = 'us-west-2' // ✅ Update to your region
     }
 
     stages {
-
         stage('Configure AWS CLI and Deploy Microservice') {
             steps {
                 script {
-                    // Inject AWS credentials
                     withCredentials([
                         usernamePassword(
                             credentialsId: 'aws-credentials',
@@ -18,36 +16,24 @@ pipeline {
                             passwordVariable: 'AWS_SECRET_ACCESS_KEY'
                         )
                     ]) {
-                        // Export AWS environment variables and validate access
-                        sh """
-                            export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-                            export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                            export AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
-                            echo "✅ Verifying AWS credentials..."
-                            aws sts get-caller-identity
-                        """
+                        withEnv([
+                            "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}",
+                            "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}",
+                            "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}"
+                        ]) {
+                            sh '''
+                                echo "✅ Verifying AWS credentials..."
+                                aws sts get-caller-identity
 
-                        // Deploy to EKS using kubectl
-                        withKubeConfig(
-                            caCertificate: '', // Optional if not needed
-                            clusterName: '',    // Set your EKS cluster name
-                            contextName: '',    // Optional
-                            credentialsId: 'Kubernetes-Credential', // Jenkins credentials for kubeconfig
-                            namespace: '',      // Optional, or set default namespace
-                            restrictKubeConfigAccess: false,
-                            serverUrl: ''       // Required if not using clusterName
-                        ) {
-                            sh """
                                 echo "📦 Deploying microservices to EKS..."
                                 kubectl apply -f deploy-envs/test-env/deployment.yaml -v=7
                                 kubectl apply -f deploy-envs/test-env/service.yaml -v=7
-                            """
+                            '''
                         }
                     }
                 }
             }
         }
-
     }
 }
 
