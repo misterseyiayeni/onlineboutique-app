@@ -28,7 +28,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: dappyplay4u/loadgeneratorapi:latest
+        image: misterseyiayeni/loadgeneratorapi:latest
         env:
         - name: FRONTEND_ADDR
           value: "frontend:80"
