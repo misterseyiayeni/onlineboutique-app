@@ -109,11 +109,20 @@ pipeline {
                     "AWS_DEFAULT_REGION=${env.AWS_DEFAULT_REGION}"
                 ])
                     {
-                        sh 'kubectl apply -f deploy-envs/test-env/deployment.yaml'
-                        sh 'kubectl apply -f deploy-envs/test-env/service.yaml'
+                            sh '''
+                                echo "✅ Verifying AWS credentials..."
+                                aws sts get-caller-identity
+
+                                echo "📥 Updating kubeconfig..."
+                                aws eks update-kubeconfig --name online-shop-eks-cluster --region us-west-2
+
+                                echo "📦 Deploying microservices to EKS..."
+                                kubectl apply -f deploy-envs/test-env/deployment.yaml -v=7
+                                kubectl apply -f deploy-envs/test-env/service.yaml -v=7
+                            '''
+                        }
                     }
                 }
-            }
         }
 
         // Manual Approval for Production
