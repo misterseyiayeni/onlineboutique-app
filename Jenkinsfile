@@ -19,7 +19,7 @@ pipeline {
         stage('Authenticate & Authorize Snyk') {
             steps {
                 withCredentials([string(credentialsId: 'Snyk-API-Token', variable: 'SNYK_TOKEN')]) {
-                    sh "${SNYK_HOME}/snyk auth $SNYK_TOKEN"
+                    sh "${SNYK_HOME}/snyk-linux auth $SNYK_TOKEN"
                 }
             }
         }
