@@ -50,7 +50,7 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'DockerHub-Credential', toolName: 'docker') {
-                        sh "docker build -t dappyplay4u/currencyservice:latest ."
+                        sh "docker build -t misterseyiayeni/currencyservice:latest ."
                     }
                 }
             }
@@ -59,7 +59,7 @@ pipeline {
         // SCA Test with Snyk
         stage('Snyk SCA Test | Dependencies') {
             steps {
-                sh "${SNYK_HOME}/snyk-linux test --docker dappyplay4u/currencyservice:latest || true"
+                sh "${SNYK_HOME}/snyk-linux test --docker misterseyiayeni/currencyservice:latest || true"
             }
         }
 
@@ -68,7 +68,7 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'DockerHub-Credential', toolName: 'docker') {
-                        sh "docker push dappyplay4u/currencyservice:latest"
+                        sh "docker push misterseyiayeni/currencyservice:latest"
                     }
                 }
             }
@@ -141,7 +141,7 @@ pipeline {
         always {
             echo 'Slack Notifications.'
             slackSend(
-                channel: '#all-minecraftapp', // update slack channel
+                channel: '#onlineboutique-dev-project', // update slack channel
                 color: COLOR_MAP[currentBuild.currentResult],
                 message: "*${currentBuild.currentResult}:* Job Name '${env.JOB_NAME}' build ${env.BUILD_NUMBER} \nBuild Timestamp: ${env.BUILD_TIMESTAMP} \nProject Workspace: ${env.WORKSPACE} \nMore info at: ${env.BUILD_URL}"
             )
