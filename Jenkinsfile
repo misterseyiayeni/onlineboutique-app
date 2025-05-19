@@ -101,26 +101,33 @@ pipeline {
        
         // Deploy to Staging/Test Environment
         stage('Deploy Microservice To The Stage/Test Env') {
-            steps {
-                script {
-                    withEnv([
-                    "AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}",
-                    "AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}",
-                    "AWS_DEFAULT_REGION=${env.AWS_DEFAULT_REGION}"
-                ])
-                    {
-                            sh '''
-                                echo "📥 Updating kubeconfig..."
-                                aws eks update-kubeconfig --name online-shop-eks-cluster --region us-west-2
+    steps {
+        script {
+            withCredentials([
+                usernamePassword(
+                    credentialsId: 'aws-credentials',
+                    usernameVariable: 'AWS_ACCESS_KEY_ID',
+                    passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+                )
+            ]) {
+                withEnv([
+                    "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}",
+                    "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}",
+                    "AWS_DEFAULT_REGION=us-west-2"
+                ]) {
+                    sh '''
+                        echo "📥 Updating kubeconfig..."
+                        aws eks update-kubeconfig --name online-shop-eks-cluster --region us-west-2
 
-                                echo "📦 Deploying microservices to EKS..."
-                                kubectl apply -f deploy-envs/test-env/deployment.yaml -v=7
-                                kubectl apply -f deploy-envs/test-env/service.yaml -v=7
-                            '''
-                        }
-                    }
+                        echo "📦 Deploying microservices to EKS..."
+                        kubectl apply -f deploy-envs/test-env/deployment.yaml -v=7
+                        kubectl apply -f deploy-envs/test-env/service.yaml -v=7
+                    '''
                 }
+            }
         }
+    }
+    
 
         // Manual Approval for Production
         stage('Approve Prod Deployment') {
