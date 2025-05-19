@@ -110,9 +110,6 @@ pipeline {
                 ])
                     {
                             sh '''
-                                echo "✅ Verifying AWS credentials..."
-                                aws sts get-caller-identity
-
                                 echo "📥 Updating kubeconfig..."
                                 aws eks update-kubeconfig --name online-shop-eks-cluster --region us-west-2
 
