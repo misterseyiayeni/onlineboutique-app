@@ -68,6 +68,7 @@ pipeline {
             }
         }
 
+
         // Configure AWS CLI before deployment
         stage('Configure AWS CLI') {
             steps {
