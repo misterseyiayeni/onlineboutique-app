@@ -17,7 +17,7 @@ spec:
       terminationGracePeriodSeconds: 5
       containers:
       - name: server
-        image: dappyplay4u/recommendationservice:latest
+        image: misterseyiayeni/recommendationservice:latest
         ports:
         - containerPort: 8080
         readinessProbe:
