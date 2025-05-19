@@ -16,7 +16,7 @@ spec:
       serviceAccountName: default
       containers:
       - name: server
-        image: dappyplay4u/shippingservice:latest
+        image: misterseyiayeni/shippingservice:latest
         ports:
         - containerPort: 50051
         env:
