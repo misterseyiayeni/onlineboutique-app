@@ -16,7 +16,7 @@ spec:
       serviceAccountName: default
       containers:
         - name: server
-          image: dappyplay4u/checkoutservice:latest
+          image: misterseyiayeni/checkoutservice:latest
           ports:
           - containerPort: 5050
           readinessProbe:
