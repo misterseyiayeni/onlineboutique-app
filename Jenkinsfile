@@ -15,7 +15,7 @@ pipeline {
         // Checkout To The Microservice Branch
         stage('Checkout To Microservice Branch') {
             steps {
-                git branch: 'app-database', url: 'https://github.com/misterseyiayeni/multi-microservices-application-projects.git'
+                git branch: 'app-database', url: 'https://github.com/misterseyiayeni/onlineboutique-app.git'
             }
         }
 
