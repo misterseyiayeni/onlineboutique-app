@@ -113,7 +113,6 @@ pipeline {
 
                                 echo "📦 Deploying microservices to EKS..."
                                 kubectl apply -f deploy-envs/test-env/deployment.yaml -v=7
-                                kubectl apply -f deploy-envs/test-env/service.yaml -v=7
                             '''
                         }
                     }
@@ -134,7 +133,6 @@ pipeline {
                 script {
                     sh '''
                         kubectl apply -f deploy-envs/prod-env/deployment.yaml
-                        kubectl apply -f deploy-envs/prod-env/service.yaml
                     '''
                 }
             }
