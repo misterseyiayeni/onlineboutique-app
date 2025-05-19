@@ -63,6 +63,30 @@ pipeline {
             }
         }
 
+        // Configure AWS CLI before deployment
+        stage('Configure AWS CLI') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'aws-credentials',
+                        usernameVariable: 'AWS_ACCESS_KEY_ID',
+                        passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+                    )]) {
+                        withEnv([
+                            "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}",
+                            "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}",
+                            "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}"
+                        ]) {
+                            sh '''
+                                echo "✅ Verifying AWS credentials..."
+                                aws sts get-caller-identity
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
         // Deploy to Staging
         stage('Deploy Microservice To The Stage/Test Env') {
             steps {
