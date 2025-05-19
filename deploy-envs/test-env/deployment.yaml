@@ -29,7 +29,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: dappyplay4u/emailservice:latest  # Update it to yours (just the username mostly)
+        image: misterseyiayeni/emailservice:latest  # Update it to yours (just the username mostly)
         ports:
         - containerPort: 8080
         env:
