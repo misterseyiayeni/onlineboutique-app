@@ -94,6 +94,7 @@ pipeline {
                             aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
                             aws configure set region $AWS_DEFAULT_REGION
                             aws sts get-caller-identity
+                            aws eks update-kubeconfig --name online-shop-eks-cluster --region us-west-2
                         """
                     }
                 }
@@ -113,6 +114,7 @@ pipeline {
                         restrictKubeConfigAccess: false,
                         serverUrl: ''
                     ) {
+                        sh 'aws eks update-kubeconfig --name online-shop-eks-cluster --region us-west-2'
                         sh 'kubectl apply -f deploy-envs/test-env/deployment.yaml'
                         sh 'kubectl apply -f deploy-envs/test-env/service.yaml'
                     }
