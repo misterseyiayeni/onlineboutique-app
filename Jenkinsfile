@@ -1,5 +1,5 @@
 def COLOR_MAP = [
-    'SUCCESS': 'good', 
+    'SUCCESS': 'good',
     'FAILURE': 'danger',
     'UNSTABLE': 'danger'
 ]
@@ -9,41 +9,22 @@ pipeline {
 
     environment {
         SCANNER_HOME = tool 'SonarScanner'
-        SNYK_HOME    = tool name: 'Snyk'
+        SNYK_HOME    = tool 'Snyk'
         AWS_DEFAULT_REGION = 'us-west-2'
     }
 
     stages {
-        // // Run Gradle SonarQube Scan (if applicable)
-        // stage('SonarQube Inspection') {
-        //     steps {
-        //         sh 'gradle sonarqube'
-        //     }
-        // }
 
-        // // SonarQube SAST Code Analysis
-        // stage("SonarQube SAST Analysis") {
-        //     steps {
-        //         withSonarQubeEnv('Sonar-Server') {
-        //             sh ''' 
-        //                 $SCANNER_HOME/bin/sonar-scanner \
-        //                 -Dsonar.projectName=app-ad-serverice \
-        //                 -Dsonar.projectKey=app-ad-serverice
-        //             '''
-        //         }
-        //     }
-        // }
-
-        // Providing Snyk Access
+        // Snyk Auth
         stage('Authenticate & Authorize Snyk') {
             steps {
                 withCredentials([string(credentialsId: 'Snyk-API-Token', variable: 'SNYK_TOKEN')]) {
-                    sh "${SNYK_HOME}/snyk-linux auth $SNYK_TOKEN"
+                    sh "${SNYK_HOME}/snyk auth $SNYK_TOKEN"
                 }
             }
         }
 
-        // OPA Dockerfile Security Scan
+        // OPA Dockerfile Scan
         stage('OPA Dockerfile Vulnerability Scan') {
             steps {
                 sh "docker run --rm -v ${WORKSPACE}:/project openpolicyagent/conftest test --policy docker-opa-security.rego Dockerfile || true"
@@ -64,11 +45,11 @@ pipeline {
         // Snyk SCA Test
         stage('Snyk SCA Test | Dependencies') {
             steps {
-                sh "${SNYK_HOME}/snyk-linux test --docker misterseyiayeni/adservice:latest || true"
+                sh "${SNYK_HOME}/snyk test --docker misterseyiayeni/adservice:latest || true"
             }
         }
 
-        // Push Image to DockerHub
+        // Push to DockerHub
         stage('Push Microservice Docker Image') {
             steps {
                 script {
@@ -79,79 +60,73 @@ pipeline {
             }
         }
 
-        // Configure AWS CLI before Kubernetes operations
+        // Configure AWS CLI
         stage('Configure AWS CLI') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'aws-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                    withEnv([
-                    "AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}",
-                    "AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}",
-                    "AWS_DEFAULT_REGION=${env.AWS_DEFAULT_REGION}"
-                ]) {
-                    sh '''
-                        echo "✅ Verifying AWS credentials..."
-                        aws sts get-caller-identity
-                    '''
+                    withCredentials([usernamePassword(
+                        credentialsId: 'aws-credentials',
+                        usernameVariable: 'AWS_ACCESS_KEY_ID',
+                        passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+                    )]) {
+                        withEnv([
+                            "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}",
+                            "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}",
+                            "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}"
+                        ]) {
+                            sh '''
+                                echo "✅ Verifying AWS credentials..."
+                                aws sts get-caller-identity
+                            '''
+                        }
+                    }
                 }
             }
         }
-    }
-}    
-       
-        // Deploy to Staging/Test Environment
+
+        // Deploy to Staging
         stage('Deploy Microservice To The Stage/Test Env') {
-    steps {
-        script {
-            withCredentials([
-                usernamePassword(
-                    credentialsId: 'aws-credentials',
-                    usernameVariable: 'AWS_ACCESS_KEY_ID',
-                    passwordVariable: 'AWS_SECRET_ACCESS_KEY'
-                )
-            ]) {
-                withEnv([
-                    "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}",
-                    "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}",
-                    "AWS_DEFAULT_REGION=us-west-2"
-                ]) {
-                    sh '''
-                        echo "📥 Updating kubeconfig..."
-                        aws eks update-kubeconfig --name online-shop-eks-cluster --region us-west-2
+            steps {
+                script {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'aws-credentials',
+                        usernameVariable: 'AWS_ACCESS_KEY_ID',
+                        passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+                    )]) {
+                        withEnv([
+                            "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}",
+                            "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}",
+                            "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}"
+                        ]) {
+                            sh '''
+                                echo "📥 Updating kubeconfig..."
+                                aws eks update-kubeconfig --name online-shop-eks-cluster --region us-west-2
 
-                        echo "📦 Deploying microservices to EKS..."
-                        kubectl apply -f deploy-envs/test-env/deployment.yaml -v=7
-                        kubectl apply -f deploy-envs/test-env/service.yaml -v=7
-                    '''
+                                echo "📦 Deploying microservices to EKS..."
+                                kubectl apply -f deploy-envs/test-env/deployment.yaml -v=7
+                                kubectl apply -f deploy-envs/test-env/service.yaml -v=7
+                            '''
+                        }
+                    }
                 }
             }
         }
-    }
-    
 
-        // Manual Approval for Production
+        // Manual Approval
         stage('Approve Prod Deployment') {
             steps {
-                input('Do you want to proceed?')
+                input('Do you want to proceed to production deployment?')
             }
         }
 
-        // Deploy to Production Environment
+        // Deploy to Production
         stage('Deploy Microservice To The Prod Env') {
             steps {
                 script {
-                    withKubeConfig(
-                        caCertificate: '',
-                        clusterName: '',
-                        contextName: '',
-                        credentialsId: 'Kubernetes-Credential',
-                        namespace: '',
-                        restrictKubeConfigAccess: false,
-                        serverUrl: ''
-                    ) {
-                        sh 'kubectl apply -f deploy-envs/prod-env/deployment.yaml'
-                        sh 'kubectl apply -f deploy-envs/prod-env/service.yaml'
-                    }
+                    sh '''
+                        kubectl apply -f deploy-envs/prod-env/deployment.yaml
+                        kubectl apply -f deploy-envs/prod-env/service.yaml
+                    '''
                 }
             }
         }
@@ -159,10 +134,10 @@ pipeline {
 
     post {
         always {
-            echo 'Slack Notifications.'
+            echo 'Sending Slack Notification...'
             slackSend channel: '#sa-devsecops-cicd-alerts',
-                color: COLOR_MAP[currentBuild.currentResult],
-                message: "*${currentBuild.currentResult}:* Job Name '${env.JOB_NAME}' build ${env.BUILD_NUMBER} \n Build Timestamp: ${env.BUILD_TIMESTAMP} \n Project Workspace: ${env.WORKSPACE} \n More info at: ${env.BUILD_URL}"
+                color: COLOR_MAP.get(currentBuild.currentResult, 'warning'),
+                message: "*${currentBuild.currentResult}:* Job '${env.JOB_NAME}' build #${env.BUILD_NUMBER} \n📅 ${new Date()} \n🔗 ${env.BUILD_URL}"
         }
     }
 }
