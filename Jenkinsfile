@@ -138,7 +138,6 @@ pipeline {
                 script {
                     sh '''
                         kubectl apply -f deploy-envs/prod-env/deployment.yaml
-                        kubectl apply -f deploy-envs/prod-env/service.yaml
                     '''
                 }
             }
