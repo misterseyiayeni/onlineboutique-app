@@ -46,7 +46,7 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'DockerHub-Credential', toolName: 'docker') {
-                        sh "docker build -t dappyplay4u/frontendservice:latest ."
+                        sh "docker build -t misterseyiayeni/frontendservice:latest ."
                     }
                 }
             }
@@ -54,7 +54,7 @@ pipeline {
 
         stage('Snyk SCA Test | Dependencies') {
             steps {
-                sh "${SNYK_HOME}/snyk-linux test --docker dappyplay4u/frontendservice:latest || true" 
+                sh "${SNYK_HOME}/snyk-linux test --docker misterseyiayeni/frontendservice:latest || true" 
             }
         }
 
@@ -62,7 +62,7 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'DockerHub-Credential', toolName: 'docker') {
-                        sh "docker push dappyplay4u/frontendservice:latest"
+                        sh "docker push misterseyiayeni/frontendservice:latest"
                     }
                 }
             }
@@ -86,7 +86,7 @@ pipeline {
             steps {
                 script {
                     withKubeConfig(credentialsId: 'Kubernetes-Credential') {
-                        sh 'aws eks update-kubeconfig --name minecraft-eks-cluster --region us-west-2'
+                        sh 'aws eks update-kubeconfig --name online-shop-eks-cluster --region us-west-2'
                         sh 'kubectl apply -f deploy-envs/test-env/deployment.yaml --validate=false'
                         sh 'kubectl apply -f deploy-envs/test-env/nodeport-service.yaml --validate=false'
                     }
@@ -97,7 +97,7 @@ pipeline {
         stage('ZAP Dynamic Testing | DAST') {
             steps {
                 sshagent(['OWASP-Zap-Credential']) {
-                    sh 'ssh -o StrictHostKeyChecking=no ubuntu@35.90.100.75 "docker run -t zaproxy/zap-weekly zap-baseline.py -t http://44.244.36.98:30000/" || true'
+                    sh 'ssh -o StrictHostKeyChecking=no ubuntu@35.86.104.93 "docker run -t zaproxy/zap-weekly zap-baseline.py -t http://54.190.237.169:30000/" || true'
                 }
             }
         }
@@ -123,7 +123,7 @@ pipeline {
     post {
         always {
             echo 'Slack Notifications.'
-            slackSend channel: '#all-minecraftapp',
+            slackSend channel: '#onlineboutique-dev-project',
                       color: COLOR_MAP[currentBuild.currentResult],
                       message: "*${currentBuild.currentResult}:* Job Name '${env.JOB_NAME}' build ${env.BUILD_NUMBER} \n Build Timestamp: ${env.BUILD_TIMESTAMP} \n Project Workspace: ${env.WORKSPACE} \n More info at: ${env.BUILD_URL}"
         }
