@@ -13,10 +13,6 @@ pipeline {
         AWS_DEFAULT_REGION = 'us-west-2'
     }
 
-    tools {
-        gradle 'Gradle'
-    }
-
     stages {
         // // Run Gradle SonarQube Scan (if applicable)
         // stage('SonarQube Inspection') {
@@ -102,30 +98,17 @@ pipeline {
         }
     }
 }    
-        //                 sh """
-        //                     aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-        //                     aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-        //                     aws configure set region $AWS_DEFAULT_REGION
-        //                 """
-        //             }
-        //         }
-        //     }
-        // }
-
+       
         // Deploy to Staging/Test Environment
         stage('Deploy Microservice To The Stage/Test Env') {
             steps {
                 script {
-                    withKubeConfig(
-                        caCertificate: '',
-                        clusterName: '',
-                        contextName: '',
-                        credentialsId: 'Kubernetes-Credential',
-                        namespace: '',
-                        restrictKubeConfigAccess: false,
-                        serverUrl: ''
-                    ) {
-                        sh 'aws eks update-kubeconfig --name online-shop-eks-cluster --region us-west-2'
+                    withEnv([
+                    "AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}",
+                    "AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}",
+                    "AWS_DEFAULT_REGION=${env.AWS_DEFAULT_REGION}"
+                ])
+                    {
                         sh 'kubectl apply -f deploy-envs/test-env/deployment.yaml'
                         sh 'kubectl apply -f deploy-envs/test-env/service.yaml'
                     }
