@@ -17,7 +17,7 @@ spec:
       terminationGracePeriodSeconds: 5
       containers:
       - name: server
-        image: dappyplay4u/cartservice:latest  # Update it to yours (just the username mostly)
+        image: misterseyiayeni/cartservice:latest  # Update it to yours (just the username mostly)
         ports:
         - containerPort: 7070
         env:
